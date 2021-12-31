@@ -4,7 +4,7 @@ import face_recognition
 import argparse
 import pickle
 import cv2
-import os
+
 # construct the argument parser and parse the arguments
 ap = argparse.ArgumentParser()
 ap.add_argument("-i", "--dataset", required=True,
@@ -23,8 +23,7 @@ data = []
 for (i, imagePath) in enumerate(imagePaths):
 	# load the input image and convert it from RGB (OpenCV ordering)
 	# to dlib ordering (RGB)
-	print("[INFO] processing image {}/{}".format(i + 1,
-		len(imagePaths)))
+	print("[INFO] processing image {}/{}".format(i + 1,len(imagePaths)))
 	print(imagePath)
 	image = cv2.imread(imagePath)
 	rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
