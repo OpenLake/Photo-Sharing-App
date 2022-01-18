@@ -30,10 +30,13 @@ post_type = re.compile(r"static/images/(.*)")
 
 
 # Create your views here.
+def landing(request):
+    return render(request,"landing.html")
+
 def index(request):
     user = request.user
     if user.is_anonymous:
-        return redirect("/login")
+        return redirect("/landing")
 
     photos = Photo.objects.filter(user=user)
     count = photos.count()
@@ -131,7 +134,7 @@ def process(request):
     imgPath = [d["imagePath"] for d in data]
     # cluster the embeddings
     clt = DBSCAN(
-        metric="euclidean", n_jobs=-1, min_samples=1
+        metric="euclidean", n_jobs=-1, min_samples=3
     )  # of parallel jobs to run (-1 will use all CPUs)
     clt.fit(encodings)
     # determine the total number of unique faces found in the dataset
