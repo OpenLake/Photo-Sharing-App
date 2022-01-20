@@ -9,7 +9,6 @@ import random
 
 
 # Required for image processing
-from imutils import paths
 import face_recognition
 import cv2
 from sklearn.cluster import DBSCAN
@@ -17,13 +16,11 @@ import numpy as np
 import re
 
 # Required for downloading
-import urllib3
-from zipfile import ZipFile
-from io import StringIO
-import urllib.request
 import os
 import zipfile
-from zipfile import ZipFile
+import tempfile, zipfile
+from django.http import HttpResponse
+from wsgiref.util import FileWrapper
 
 
 post_type = re.compile(r"static/images/(.*)")
@@ -134,7 +131,7 @@ def process(request):
     imgPath = [d["imagePath"] for d in data]
     # cluster the embeddings
     clt = DBSCAN(
-        metric="euclidean", n_jobs=-1, min_samples=3
+        metric="euclidean", n_jobs=-1, min_samples=1
     )  # of parallel jobs to run (-1 will use all CPUs)
     clt.fit(encodings)
     # determine the total number of unique faces found in the dataset
@@ -193,19 +190,8 @@ def finalPhoto(request, pk):
     return render(request, "finalPhoto.html", context)
 
 
-from django.http import FileResponse
-
-import tempfile, zipfile
-from django.http import HttpResponse
-from wsgiref.util import FileWrapper
-
-
 def downloadZIP(request, pk):
-    """
-    Create a ZIP file on disk and transmit it in chunks of 8KB,
-    without loading the whole file into memory. A similar approach can
-    be used for large dynamic PDF files.
-    """
+    
     person = Person.objects.get(id=pk)
     personGalleryphotos = PersonGallery.objects.filter(person=person)
 
@@ -213,18 +199,13 @@ def downloadZIP(request, pk):
     temp = tempfile.TemporaryFile()
     archive = zipfile.ZipFile(temp, "w", zipfile.ZIP_DEFLATED)
     for photo in allPhotos:
-        print(os.getcwd())
-        filename = str("/static") + photo.image.url  # Replace by your files here.
-
-        archive.write(filename, "j.jpg")  # 'file%d.png' will be the
-        # name of the file in the
-        # zip
+        filename = os.getcwd() + str("/static/images") + photo.image.url  # Replace by your files here.
+        photo_name = photo.image.url[1:]
+        archive.write(filename, f"{photo_name}")  
     archive.close()
-
     temp.seek(0)
     wrapper = FileWrapper(temp)
-
     response = HttpResponse(wrapper, content_type="application/zip")
-    response["Content-Disposition"] = "attachment; filename=test.zip"
+    response["Content-Disposition"] = "attachment; filename=album.zip"
 
     return response

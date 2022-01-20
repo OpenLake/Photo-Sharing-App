@@ -21,3 +21,4 @@ sqlparse==0.4.2
 threadpoolctl==3.0.0
 tomli==1.2.3
 typing-extensions==4.0.1
+urllib3==1.26.8
