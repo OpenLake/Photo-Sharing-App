@@ -7,7 +7,6 @@ from home.models import Photo, Person, PersonGallery
 import string
 import random
 
-
 # Required for image processing
 import face_recognition
 import cv2
@@ -22,13 +21,14 @@ import tempfile, zipfile
 from django.http import HttpResponse
 from wsgiref.util import FileWrapper
 
-
+# ReGEx required for getting photo name
 post_type = re.compile(r"static/images/(.*)")
 
 
 # Create your views here.
 def landing(request):
-    return render(request,"landing.html")
+    return render(request, "landing.html")
+
 
 def index(request):
     user = request.user
@@ -57,12 +57,12 @@ def loginUser(request):
 
 def logoutUser(request):
     logout(request)
-    return redirect("/login")
+    return redirect("/landing")
 
 
 def registerUser(request):
     global res
-    res = "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
+    res = "".join(random.choices(string.ascii_uppercase + string.digits, k=8))
     context = {"rcode": res}
 
     return render(request, "register.html", context)
@@ -102,7 +102,10 @@ def process(request):
     Person.objects.filter(user=user).delete()
     photos = Photo.objects.filter(user=user)
     if photos.count() == 0:
-        return render(request, "404.html")
+        context = {
+            "error_message": "No photos to process.\n Upload some photos and then Try again"
+        }
+        return render(request, "404.html",context)
     imagePaths = [("static/images/" + str(photo.image)) for photo in photos]
     data = []
 
@@ -191,7 +194,7 @@ def finalPhoto(request, pk):
 
 
 def downloadZIP(request, pk):
-    
+
     person = Person.objects.get(id=pk)
     personGalleryphotos = PersonGallery.objects.filter(person=person)
 
@@ -199,9 +202,11 @@ def downloadZIP(request, pk):
     temp = tempfile.TemporaryFile()
     archive = zipfile.ZipFile(temp, "w", zipfile.ZIP_DEFLATED)
     for photo in allPhotos:
-        filename = os.getcwd() + str("/static/images") + photo.image.url  # Replace by your files here.
+        filename = (
+            os.getcwd() + str("/static/images") + photo.image.url
+        )  # Replace by your files here.
         photo_name = photo.image.url[1:]
-        archive.write(filename, f"{photo_name}")  
+        archive.write(filename, f"{photo_name}")
     archive.close()
     temp.seek(0)
     wrapper = FileWrapper(temp)
