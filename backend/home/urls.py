@@ -13,7 +13,6 @@ urlpatterns = [
     path("album/<str:pk>/", views.viewAlbum, name="album"),
     path("finalPhoto/<str:pk>/", views.finalPhoto, name="finalPhoto"),
     path("download/<str:pk>/", views.downloadZIP, name="download"),
-    path("add", views.addPhoto, name="add"),
     path("albumGallery", views.albumGallery, name="albumGallery"),
     path("process", views.process, name="process"),
 ]

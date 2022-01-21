@@ -85,19 +85,6 @@ def registerUser2(request):
         return redirect("/login")
 
 
-def addPhoto(request):
-    user = request.user
-
-    if request.method == "POST":
-        images = request.FILES.getlist("images")
-        for image in images:
-            print(image)
-            photo = Photo.objects.create(user=user, image=image)
-            photo.save()
-        return redirect("index")
-    return render(request, "add.html")
-
-
 def viewPhoto(request, pk):
     photo = Photo.objects.get(id=pk)
     return render(request, "photo.html", {"photo": photo})
@@ -125,7 +112,6 @@ def process(request):
         return render(request, "404.html",context)
     imagePaths = [("static/images/" + str(photo.image)) for photo in photos]
     data = []
-
     for (i, imagePath) in enumerate(imagePaths):
         # load the input image and convert it from RGB (OpenCV ordering)
         # to dlib ordering (RGB)
