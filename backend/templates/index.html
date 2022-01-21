@@ -38,7 +38,24 @@
                     
                     <ul class="list-group list-group-flush">
 
-                        <a href="{% url 'add' %}" class="btn btn-dark btn-block btn-sm m-1">Add Photo</a>
+                        <form method='POST' action="/" enctype="multipart/form-data">
+                            {% csrf_token %}
+    
+                            <div class="form-group m-3">
+                                <label>Upload image</label>
+                                <input required name="images" type="file" multiple class="form-control-file">
+                            </div>
+    
+                            <button type='submit' class="btn btn-primary m-3">Submit</button>
+    
+                        </form>
+                    </ul>
+                </div>
+                <br>
+
+                <div class="card">
+                    <ul class="list-group list-group-flush">
+                        {% comment %} <a href="{% url 'add' %}" class="btn btn-dark btn-block btn-sm m-1">Add Photo</a> {% endcomment %}
                         <a href="{% url 'process' %}" class="btn btn-dark btn-block btn-sm m-1">Process</a>
                         <a href="{% url 'logout' %}" class="btn btn-dark btn-block btn-sm m-1">Logout</a>
                     </ul>
@@ -50,11 +67,17 @@
 
                     {% for photo in photos %}
                     <div class="col-md-4">
-                        <div class="card my-2">
+                        <div class="card my-2" style="position: relative">
                             <img class="image-thumbail" src="{{photo.image.url}}" alt="Card image cap">
-
                             
                             <a href="{% url 'photo' photo.id %}" class="btn btn-outline-dark btn-sm m-1">View</a>
+                            
+                            <form method='POST' action="{% url 'delete' photo.id %}">
+                                {% csrf_token %}      
+                                <input type="image" src="https://i.imgur.com/uwjl1lM.png" width="30" height="30" style="position: absolute; top: 7px; right: 7px"/>
+                            </form>
+                            
+
                         </div>
                     </div>
                     {% empty %}

@@ -6,6 +6,7 @@ from django.http import HttpResponse
 from home.models import Photo, Person, PersonGallery
 import string
 import random
+from django.contrib import messages
 
 # Required for image processing
 import face_recognition
@@ -34,6 +35,13 @@ def index(request):
     user = request.user
     if user.is_anonymous:
         return redirect("/landing")
+
+    elif request.method == "POST":
+        images = request.FILES.getlist("images")
+        for image in images:
+            print(image)
+            photo = Photo.objects.create(user=user, image=image)
+            photo.save()
 
     photos = Photo.objects.filter(user=user)
     count = photos.count()
@@ -93,6 +101,15 @@ def addPhoto(request):
 def viewPhoto(request, pk):
     photo = Photo.objects.get(id=pk)
     return render(request, "photo.html", {"photo": photo})
+
+
+def deletePhoto(request,pk):
+    user = request.user
+    photos = Photo.objects.filter(user=user)
+    if request.method=="POST":
+        photo = photos.get(id=pk)
+        photo.delete()
+    return redirect("index")
 
 
 def process(request):
