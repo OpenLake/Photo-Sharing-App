@@ -6,7 +6,6 @@ from django.http import HttpResponse
 from home.models import Photo, Person, PersonGallery
 import string
 import random
-from django.contrib import messages
 
 # Required for image processing
 import face_recognition
@@ -21,6 +20,10 @@ import zipfile
 import tempfile, zipfile
 from django.http import HttpResponse
 from wsgiref.util import FileWrapper
+
+# for checking face simmilarity
+import scipy.spatial.distance as dist
+
 
 # ReGEx required for getting photo name
 post_type = re.compile(r"static/images/(.*)")
@@ -90,10 +93,10 @@ def viewPhoto(request, pk):
     return render(request, "photo.html", {"photo": photo})
 
 
-def deletePhoto(request,pk):
+def deletePhoto(request, pk):
     user = request.user
     photos = Photo.objects.filter(user=user)
-    if request.method=="POST":
+    if request.method == "POST":
         photo = photos.get(id=pk)
         photo.delete()
     return redirect("index")
@@ -109,9 +112,10 @@ def process(request):
         context = {
             "error_message": "No photos to process.\n Upload some photos and then Try again"
         }
-        return render(request, "404.html",context)
+        return render(request, "404.html", context)
     imagePaths = [("static/images/" + str(photo.image)) for photo in photos]
     data = []
+
     for (i, imagePath) in enumerate(imagePaths):
         # load the input image and convert it from RGB (OpenCV ordering)
         # to dlib ordering (RGB)
@@ -134,10 +138,14 @@ def process(request):
 
     data = np.array(data)
     encodings = [d["encoding"] for d in data]
-    imgPath = [d["imagePath"] for d in data]
     # cluster the embeddings
     clt = DBSCAN(
-        metric="euclidean", n_jobs=-1, min_samples=1
+        metric="cosine",
+        n_jobs=-1,
+        min_samples=1,
+        eps=0.06,
+        # for cosine use eps="0.06"
+        # for metric="euclidean" use eps="0.55"
     )  # of parallel jobs to run (-1 will use all CPUs)
     clt.fit(encodings)
     # determine the total number of unique faces found in the dataset
@@ -163,17 +171,102 @@ def process(request):
                 person=person, image=str(link.group(1))
             )
             personGallery.save()
-
+    user = request.user
     persons = Person.objects.filter(user=user)
-    context = {"persons": persons, "faces": numUniqueFaces}
+
+    score_list = []
+    numUniqueFaces = persons.count()
+    path = os.getcwd() + str("/static/images/")
+
+    for i in range(numUniqueFaces):
+        intmd_lst = []
+        for j in range(i + 1, numUniqueFaces):
+            image1 = cv2.imread(path + str(persons[i].thumbnail))
+            image1 = cv2.cvtColor(image1, cv2.COLOR_BGR2GRAY)
+            image2 = cv2.imread(path + str(persons[j].thumbnail))
+            image2 = cv2.cvtColor(image2, cv2.COLOR_BGR2GRAY)
+            score = dist.cosine(image1.reshape(-1), image2.reshape(-1))
+            intmd_lst.append([i, j, score])
+            print(i, j, score)
+        score_list.append(intmd_lst)
+
+    result = []
+    unsorted_person = [i for i in range(1, numUniqueFaces)]
+    sorted_person = []
+    start = 0
+    next = score_list[0][0][1]
+    sorted_person.append(start)
+    i = 0
+    for _ in range(numUniqueFaces - 1):
+        print(score_list[start])
+        min = 1
+        for ele in score_list[start]:
+            if ele[2] < min:
+                min = ele[2]
+                next = ele[1]
+        print(min, next)
+
+        if start == next:
+            break
+        else:
+            unsorted_person.remove(next)
+            sorted_person.append(next)
+            start = next
+    final = sorted_person + unsorted_person
+    for ele in final:
+        result.append(persons[ele])
+
+    context = {"persons": result, "faces": numUniqueFaces}
     return render(request, "process.html", context)
 
 
 def albumGallery(request):
     user = request.user
     persons = Person.objects.filter(user=user)
+
+    score_list = []
     numUniqueFaces = persons.count()
-    context = {"persons": persons, "faces": numUniqueFaces}
+    path = os.getcwd() + str("/static/images/")
+
+    for i in range(numUniqueFaces):
+        intmd_lst = []
+        for j in range(i + 1, numUniqueFaces):
+            image1 = cv2.imread(path + str(persons[i].thumbnail))
+            image1 = cv2.cvtColor(image1, cv2.COLOR_BGR2GRAY)
+            image2 = cv2.imread(path + str(persons[j].thumbnail))
+            image2 = cv2.cvtColor(image2, cv2.COLOR_BGR2GRAY)
+            score = dist.cosine(image1.reshape(-1), image2.reshape(-1))
+            intmd_lst.append([i, j, score])
+            print(i, j, score)
+        score_list.append(intmd_lst)
+
+    result = []
+    unsorted_person = [i for i in range(1, numUniqueFaces)]
+    sorted_person = []
+    start = 0
+    next = score_list[0][0][1]
+    sorted_person.append(start)
+    i = 0
+    for _ in range(numUniqueFaces - 1):
+        print(score_list[start])
+        min = 1
+        for ele in score_list[start]:
+            if ele[2] < min:
+                min = ele[2]
+                next = ele[1]
+        print(min, next)
+
+        if start == next:
+            break
+        else:
+            unsorted_person.remove(next)
+            sorted_person.append(next)
+            start = next
+    final = sorted_person + unsorted_person
+    for ele in final:
+        result.append(persons[ele])
+
+    context = {"persons": result, "faces": numUniqueFaces}
     return render(request, "process.html", context)
 
 
@@ -181,7 +274,6 @@ def viewAlbum(request, pk):
     person = Person.objects.get(id=pk)
     personGalleryphotos = PersonGallery.objects.filter(person=person)
     count = personGalleryphotos.count()
-    allPhotos = personGalleryphotos.all()
     context = {
         "person": person,
         "personGalleryphotos": personGalleryphotos,
