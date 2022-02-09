@@ -1,1 +1,1 @@
-web: python backend/manage.py runserver 0.0.0.0:9000
+web: python backend/manage.py runserver 0.0.0.0:$PORT
