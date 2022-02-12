@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Album Gallery</title>
+
+    <!-- CSS only -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-giJF6kkoqNQ00vy+HMDP7azOuL0xtbfIcaT9wjKHr8RbDVddVHyTfAAsrekwKmP1" crossorigin="anonymous">
+
+    <style>
+        .image-thumbail {
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .list-group-item a {
+            text-decoration: none;
+            color: black;
+        }
+    </style>
+</head>
+
+<body class="m-5">
+
+    <div class="container">
+        <div class="row">
+            <div class="col-md-3">
+                {% if request.user.is_authenticated %}
+                <p>Your RoomCode:<br> <strong>{{request.user}}</strong></p>
+                <p>Your Photos:<br> <strong>{{count}}</strong></p>
+                {% endif %}
+                
+                
+                <div class="card">
+                    
+                    <ul class="list-group list-group-flush">
+
+                        <a href="{% url 'albumGallery' %}" class="btn btn-dark btn-block btn-sm m-1">Go Back</a>
+                        <a href="{% url 'download' person.id %}" class="btn btn-dark btn-block btn-sm m-1">Download Zip</a>
+                        <br>
+                        <a href="{% url 'logout' %}" class="btn btn-dark btn-block btn-sm m-1">Logout</a>
+                    </ul>
+                </div>
+
+            </div>
+            <div class="col-md-9">
+                <div class="row">
+
+                    {% for photo in personGalleryphotos %}
+                    <div class="col-md-4">
+                        <div class="card my-2">
+                            <img class="image-thumbail" src="{{photo.image.url}}" alt="Card image cap">
+
+                            
+                            <a href="{% url 'finalPhoto' photo.id %}" class="btn btn-outline-dark btn-sm m-1">View</a>
+                            <a href="{{photo.image.url}}" download class="btn btn-outline-dark btn-sm m-1">Download</a>
+                            
+                        </div>
+                    </div>
+                    {% empty %}
+                    <h3>No photos...</h3>
+                    {% endfor %}
+
+
+
+                </div>
+            </div>              
+        </div>
+    </div>
+
+</body>
+
+</html>
