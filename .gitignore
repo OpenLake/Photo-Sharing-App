@@ -1,0 +1,6 @@
+.env/*
+*.pyc
+backend/core/__pycache__/
+backend/db.sqlite3
+backend/home/__pycache__/
+backend/home/migrations/__pycache__/*
