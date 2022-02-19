@@ -53,6 +53,6 @@ When a user uploads a group photos and starts to "Process" it, the [Face Recogni
 
 **Q: I got Error: That port is already in use.**
 
-A: It occurs because some process has occupied that port. You may kill the process using ``sudo fuser -k 8000/tcp`` or use a different port. For using a different port simply replace ``bash setup.sh`` with ``bash setup.sh <port-number>``. An example ``bash setup.sh 7000``. Now you app will successfully run on http://127.0.0.1:7000/
+A: It occurs because some process has occupied that port. You may kill the process using ``sudo fuser -k 8000/tcp`` or use a different port. For using a different port simply replace ``bash setup.sh`` with ``bash setup.sh <port-number>``. An example ``bash setup.sh 7000``. Now your app will successfully run on http://127.0.0.1:7000/
 
 
