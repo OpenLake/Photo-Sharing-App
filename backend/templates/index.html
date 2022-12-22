@@ -22,6 +22,12 @@
             text-decoration: none;
             color: black;
         }
+        
+        .adjust-style{
+            margin: 10px;
+            /* flex-flow: column wrap; */
+            overflow: hidden;
+        }
     </style>
 </head>
 
@@ -31,33 +37,42 @@
                 {% if request.user.is_authenticated %}
                 <p>Your RoomCode:<br> <strong>{{request.user}}</strong></p>
                 <p>Photos Uploaded:<br> <strong>{{count}}</strong></p>
+                <p>GPU Acceleration Available: <br> <strong>{{GPU}}</strong> </p>
                 {% endif %}
                 
                 <div class="card">
-                    
                     <ul class="list-group list-group-flush">
-
                         <form method='POST' action="/" enctype="multipart/form-data">
                             {% csrf_token %}
-    
                             <div class="form-group m-3">
                                 <label>Upload image</label>
-                                <input required name="images" type="file" multiple class="form-control-file">
+                                <input required name="images" type="file" multiple webkitdirectory directory class="form-control-file">
                             </div>
-    
                             <button type='submit' class="btn btn-primary m-3">Submit</button>
-    
                         </form>
                     </ul>
                 </div>
                 <br>
+                <form method="post" action="{% url 'process' %}">
+                    {% csrf_token %}
+                <div class="card">
+                    <div class="adjust-style">
+                    <p>Select Appropriate Model:</p>
+                    <select name="models" id="models">
+                        <option value="mediapipe">MediaPipe(Recommended for CPU users)</option>
+                        <option value="yolov7">YOLOV7(Recommended for cuda enabled GPU users)</option>
+                        <option value="yolov7w6">YOLOV7(High-End)(Recommended for cuda enabled GPU users)</option>
+                      </select>
+                    </div>
+                </div>
 
                 <div class="card">
                     <ul class="list-group list-group-flush">
-                        <a href="{% url 'process' %}" class="btn btn-dark btn-block btn-sm m-1">Process</a>
+                        <button class="btn btn-dark btn-block btn-sm m-1" type="submit">Process</button>
                         <a href="{% url 'logout' %}" class="btn btn-dark btn-block btn-sm m-1">Logout</a>
                     </ul>
                 </div>
+            </form>
 
             </div>
             <div class="col-md-9">

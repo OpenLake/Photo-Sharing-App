@@ -6,9 +6,9 @@ from django.http import HttpResponse
 from home.models import Photo, Person, PersonGallery
 import string
 import random
+from utils import checkGPUavailable, download_weights
 
 # Required for image processing
-import face_recognition
 import cv2
 from sklearn.cluster import DBSCAN
 import numpy as np
@@ -25,31 +25,35 @@ from wsgiref.util import FileWrapper
 import scipy.spatial.distance as dist
 
 
+
 # ReGEx required for getting photo name
 post_type = re.compile(r"static/images/(.*)")
 
+
+# Importing ML Library
+import face_detection_embedding
 
 # Create your views here.
 def landing(request):
     return render(request, "landing.html")
 
 
-def index(request):
+def index(request):    
     user = request.user
+    print(user)
     if user.is_anonymous:
         return redirect("/landing")
 
     elif request.method == "POST":
         images = request.FILES.getlist("images")
         for image in images:
-            print(image)
             photo = Photo.objects.create(user=user, image=image)
             photo.save()
 
     photos = Photo.objects.filter(user=user)
     count = photos.count()
-
-    context = {"photos": photos, "count": count}
+    is_gpu = checkGPUavailable()
+    context = {"photos": photos, "count": count, "GPU": is_gpu}
     return render(request, "index.html", context)
 
 
@@ -113,31 +117,54 @@ def process(request):
             "error_message": "No photos to process.\n Upload some photos and then Try again"
         }
         return render(request, "404.html", context)
+    
+    if request.method != 'POST':
+        return redirect("/login")
+    
     imagePaths = [("static/images/" + str(photo.image)) for photo in photos]
+    # print(request.method)
+    models = request.POST["models"]
+    # Yha se code start kro
+    if models == "mediapipe":
+        dic, unclassified = face_detection_embedding.detectPeopleMediaPipe({"path": imagePaths, "confidence": 0.25})
+    elif models == "yolov7":
+        # Check if weights exists if not then I will download them from internet
+        download_weights("ML/yolov7face/weights/yolov7-face.pt", "https://drive.google.com/file/d/1k7zcq5_Vj8oqnkvll5Uvg57StOOYLnKn/view?usp=share_link")
+        dic, unclassified = face_detection_embedding.detectPeopleYolov7({"weights":"ML/yolov7face/weights/yolov7-face.pt",
+                                                                        "source": imagePaths,
+                                                                        "img_size": 640,
+                                                                        "conf_thres": 0.25,
+                                                                        "iou_thres": 0.45,
+                                                                        "device": '',
+                                                                        "agnostic_nms":False,
+                                                                        "classes": None,
+                                                                        "augment": False,
+                                                                        "hide_conf": False,
+                                                                        "kpt_label": 5})
+    else:
+        # Check if weights exists if not then I will download them from internet
+        download_weights("ML/yolov7face/weights/yolov7-w6-face.pt", "https://drive.google.com/file/d/1ThpUTdnEFG13WhGEPCI0Ut2NJYdq59-B/view?usp=share_link")
+        dic, unclassified = face_detection_embedding.detectPeopleYolov7({"weights":"ML/yolov7face/weights/yolov7-w6-face.pt",
+                                                                        "source": imagePaths,
+                                                                        "img_size": 640,
+                                                                        "conf_thres": 0.25,
+                                                                        "iou_thres": 0.45,
+                                                                        "device": '',
+                                                                        "agnostic_nms":False,
+                                                                        "classes": None,
+                                                                        "augment": False,
+                                                                        "hide_conf": False,
+                                                                        "kpt_label": 5})                  
+    
+    # Checking to see if VGGFace weights exists
+    download_weights("ML/FaceNet/Weights/facenet_keras_weights.h5", "https://drive.google.com/file/d/1QAYt7g9ig6UHYdpd1WW7P1Ci2XN32Kfd/view?usp=sharing")
+    encodings = face_detection_embedding.generateEmbedding(dic)
+    
     data = []
-
-    for (i, imagePath) in enumerate(imagePaths):
-        # load the input image and convert it from RGB (OpenCV ordering)
-        # to dlib ordering (RGB)
-        print("[INFO] processing image {}/{}".format(i + 1, len(imagePaths)))
-        print(imagePath)
-        image = cv2.imread(imagePath)
-        rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        # detect the (x, y)-coordinates of the bounding boxes
-        # corresponding to each face in the input image
-        boxes = face_recognition.face_locations(rgb, model="hog")
-        # compute the facial embedding for the face
-        encodings = face_recognition.face_encodings(rgb, boxes)
-        # build a dictionary of the image path, bounding box location,
-        # and facial encodings for the current image
-        d = [
-            {"imagePath": imagePath, "loc": box, "encoding": enc}
-            for (box, enc) in zip(boxes, encodings)
-        ]
-        data.extend(d)
-
-    data = np.array(data)
-    encodings = [d["encoding"] for d in data]
+    for path, boundingboxes in dic.items():
+        data.extend([{"imagePath": path, "loc": i,} for i in boundingboxes])
+    
+    print("Shape of encodings", np.array(encodings).shape)
     # cluster the embeddings
     clt = DBSCAN(
         metric="cosine",
@@ -151,13 +178,13 @@ def process(request):
     # determine the total number of unique faces found in the dataset
     labelIDs = np.unique(clt.labels_)
     numUniqueFaces = len(np.where(labelIDs > -1)[0])
-
+    
     for labelID in labelIDs:
         idxs = np.where(clt.labels_ == labelID)[0]
         owner_pic = data[idxs[0]]["imagePath"]
         image = cv2.imread(owner_pic)
-        (top, right, bottom, left) = data[idxs[0]]["loc"]
-        face = image[top:bottom, left:right]
+        (x1, y1, x2, y2) = data[idxs[0]]["loc"]
+        face = image[int(y1):int(y2), int(x1):int(x2)]
         face = cv2.resize(face, (96, 96))
         face_img_path = f"{user.get_username()}_owner{labelID}.jpg"
         cv2.imwrite(f"static/images/{face_img_path}", face)
@@ -289,7 +316,6 @@ def finalPhoto(request, pk):
 
 
 def downloadZIP(request, pk):
-
     person = Person.objects.get(id=pk)
     personGalleryphotos = PersonGallery.objects.filter(person=person)
 
