@@ -5,11 +5,12 @@ from ML.yolov7face.utils.datasets import LoadImages
 from ML.yolov7face.utils.general import check_img_size, set_logging
 from ML.yolov7face.utils.torch_utils import select_device
 from ML.yolov7face.face_detection import run_inference
-from ML.VGG_Face.model import get_pretrained_model
-from ML.VGG_Face.dataGenerator import DataGenerator
-from sklearn.decomposition import PCA
+from ML.FaceNet.model import get_pretrained_model
+from ML.FaceNet.dataGenerator import DataGenerator
 from ML.MediaPipe.face_detection import faceDetection
 import mediapipe as mp
+from sklearn.preprocessing import Normalizer
+
 
 
 def detectPeopleYolov7(opt):
@@ -61,20 +62,14 @@ def detectPeopleMediaPipe(opt):
     return faceDetection(opt["path"], face_detection)
 
 
-def generateEmbedding(dic, n_features=128, batch_size=64):
-    vgg_model = get_pretrained_model()
-    t0 = time.time()
-    data = vgg_model.predict(
+def generateEmbedding(dic,batch_size=64):
+    faceNet = get_pretrained_model()
+    data = faceNet.predict(
         DataGenerator(dic, batch_size=64),
         batch_size=batch_size,
         verbose='auto',
         workers=-1,
         use_multiprocessing=True
     )
-    # Applying PCA to reduce dimensions
-    if len(data) > 500:
-        pca = PCA(n_components=min(len(data), n_features))
-        print(time.time() - t0)
-        return pca.fit_transform(data)
-    else:
-        return data
+    transformer = Normalizer().fit(data)
+    return transformer.transform(data)

@@ -1,8 +1,15 @@
 import numpy as np
 import cv2 as cv
+import tensorflow as tf
+
+def normalize(img):
+    mean, std = img.mean(), img.std()
+    return (img - mean) / std
+
 
 def _load_image(image_path, bounding_boxes):    
-    im0s = cv.imread(image_path)
+    img0s = cv.cvtColor(cv.imread(image_path), cv.COLOR_BGR2RGB)
+    im0s = normalize(img0s)
     faces = []
     for det in bounding_boxes:
         h1, h2, w1, w2 = int(det[1]), int(det[3]), int(det[0]), int(det[2])
@@ -11,8 +18,8 @@ def _load_image(image_path, bounding_boxes):
         w1 = 0 if w1 < 0 else w1
         w2 = 0 if w2 < 0 else w2
         faces.append(im0s[h1:h2, w1:w2])
-    # faces = np.array(fac, dtype=object)
-    resized_faces = [cv.resize(each_face, (224,224), interpolation= cv.INTER_LINEAR) for each_face in faces]
+    
+    resized_faces = [cv.resize(each_face, (160,160)) for each_face in faces]
     return resized_faces
 
 

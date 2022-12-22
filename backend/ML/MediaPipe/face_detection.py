@@ -13,15 +13,17 @@ def faceDetection(path, face_detection):
     
     # For the time being
     files = path
-    
-    for _, file in enumerate(files):
+    total = len(files)
+    for idx, file in enumerate(files):
         image = cv2.imread(file)
         # Convert the BGR image to RGB and process it with MediaPipe Face Detection.
         results = face_detection.process(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+        print(idx,"/",total)
         h,w,_ = image.shape
         # Draw face detections of each face.
         if not results.detections:
             unclassifiedImages.append(file)
+            continue
 
         tmp = []
         for detection in results.detections:

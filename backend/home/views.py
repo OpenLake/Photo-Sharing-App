@@ -157,7 +157,7 @@ def process(request):
                                                                         "kpt_label": 5})                  
     
     # Checking to see if VGGFace weights exists
-    download_weights("ML/VGG_Face/Weights/vgg_face_weights.h5", "https://drive.google.com/file/d/1qlYK43-_5qVYFBDoUVlC3BLU4VnD4nZi/view?usp=sharing")
+    download_weights("ML/FaceNet/Weights/facenet_keras_weights.h5", "https://drive.google.com/file/d/1QAYt7g9ig6UHYdpd1WW7P1Ci2XN32Kfd/view?usp=sharing")
     encodings = face_detection_embedding.generateEmbedding(dic)
     
     data = []
