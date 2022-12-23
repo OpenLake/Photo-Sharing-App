@@ -40,7 +40,6 @@ def landing(request):
 
 def index(request):    
     user = request.user
-    print(user)
     if user.is_anonymous:
         return redirect("/landing")
 
@@ -184,8 +183,12 @@ def process(request):
         owner_pic = data[idxs[0]]["imagePath"]
         image = cv2.imread(owner_pic)
         (x1, y1, x2, y2) = data[idxs[0]]["loc"]
-        face = image[int(y1):int(y2), int(x1):int(x2)]
-        face = cv2.resize(face, (96, 96))
+        # face = image[int(y1):int(y2), int(x1):int(x2)]
+        face = cv2.rectangle(image,(int(x1),int(y1)),(int(x2),int(y2)),(0,255,0),3)
+        # try:
+        #     face = cv2.resize(face, (96, 96))
+        # except:
+        #     face = np.random.randint(5, size=(96, 96))
         face_img_path = f"{user.get_username()}_owner{labelID}.jpg"
         cv2.imwrite(f"static/images/{face_img_path}", face)
         person = Person.objects.create(user=user, thumbnail=face_img_path)
@@ -201,46 +204,49 @@ def process(request):
     user = request.user
     persons = Person.objects.filter(user=user)
 
-    score_list = []
+    # score_list = []
     numUniqueFaces = persons.count()
     path = os.getcwd() + str("/static/images/")
 
-    for i in range(numUniqueFaces):
-        intmd_lst = []
-        for j in range(i + 1, numUniqueFaces):
-            image1 = cv2.imread(path + str(persons[i].thumbnail))
-            image1 = cv2.cvtColor(image1, cv2.COLOR_BGR2GRAY)
-            image2 = cv2.imread(path + str(persons[j].thumbnail))
-            image2 = cv2.cvtColor(image2, cv2.COLOR_BGR2GRAY)
-            score = dist.cosine(image1.reshape(-1), image2.reshape(-1))
-            intmd_lst.append([i, j, score])
-            print(i, j, score)
-        score_list.append(intmd_lst)
+    # Code so that same persons get mapped to nearby places
+    # for i in range(numUniqueFaces):
+    #     intmd_lst = []
+    #     for j in range(i + 1, numUniqueFaces):
+    #         image1 = cv2.imread(path + str(persons[i].thumbnail))
+    #         image1 = cv2.cvtColor(image1, cv2.COLOR_BGR2GRAY)
+    #         image2 = cv2.imread(path + str(persons[j].thumbnail))
+    #         image2 = cv2.cvtColor(image2, cv2.COLOR_BGR2GRAY)
+    #         score = dist.cosine(image1.reshape(-1), image2.reshape(-1))
+    #         intmd_lst.append([i, j, score])
+    #         print(i, j, score)
+    #     score_list.append(intmd_lst)
 
+    # result = []
+    # unsorted_person = [i for i in range(1, numUniqueFaces)]
+    # sorted_person = []
+    # start = 0
+    # next = score_list[0][0][1]
+    # sorted_person.append(start)
+    # i = 0
+    # for _ in range(numUniqueFaces - 1):
+    #     print(score_list[start])
+    #     min = 1
+    #     for ele in score_list[start]:
+    #         if ele[2] < min:
+    #             min = ele[2]
+    #             next = ele[1]
+    #     print(min, next)
+
+    #     if start == next:
+    #         break
+    #     else:
+    #         unsorted_person.remove(next)
+    #         sorted_person.append(next)
+    #         start = next
+    # final = sorted_person + unsorted_person
+ 
     result = []
-    unsorted_person = [i for i in range(1, numUniqueFaces)]
-    sorted_person = []
-    start = 0
-    next = score_list[0][0][1]
-    sorted_person.append(start)
-    i = 0
-    for _ in range(numUniqueFaces - 1):
-        print(score_list[start])
-        min = 1
-        for ele in score_list[start]:
-            if ele[2] < min:
-                min = ele[2]
-                next = ele[1]
-        print(min, next)
-
-        if start == next:
-            break
-        else:
-            unsorted_person.remove(next)
-            sorted_person.append(next)
-            start = next
-    final = sorted_person + unsorted_person
-    for ele in final:
+    for ele in range(numUniqueFaces):
         result.append(persons[ele])
 
     context = {"persons": result, "faces": numUniqueFaces}
