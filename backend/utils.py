@@ -8,6 +8,9 @@ def checkGPUavailable():
 
 def download_weights(path, url):
     if not os.path.exists(path):
-        os.mkdir('/'.join(path.split("/")[:-1]))
+        try:
+            os.mkdir('/'.join(path.split("/")[:-1]))
+        except FileExistsError:
+            pass
         print("Hang Tight Downloading the weights for the model")
         gdown.download(url=url, output=path, quiet=False, fuzzy=True)
