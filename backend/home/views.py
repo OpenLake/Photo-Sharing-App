@@ -7,6 +7,8 @@ from home.models import Photo, Person, PersonGallery
 import string
 import random
 from utils import checkGPUavailable, download_weights
+import hdbscan
+
 
 # Required for image processing
 import cv2
@@ -165,31 +167,21 @@ def process(request):
         data.extend([{"imagePath": path, "loc": i,} for i in boundingboxes])
     
     print("Shape of encodings", np.array(encodings).shape)
-    # cluster the embeddings
-    clt = DBSCAN(
-        metric="cosine",
-        n_jobs=-1,
-        min_samples=1,
-        eps=0.06,
-        # for cosine use eps="0.06"
-        # for metric="euclidean" use eps="0.55"
-    )  # of parallel jobs to run (-1 will use all CPUs)
-    clt.fit(encodings)
-    # determine the total number of unique faces found in the dataset
-    labelIDs = np.unique(clt.labels_)
+
+    labels_ = hdbscan.HDBSCAN(min_samples=10,min_cluster_size=int(request.POST["Size"])).fit_predict(encodings)
+    labelIDs = np.unique(labels_)
     numUniqueFaces = len(np.where(labelIDs > -1)[0])
     
     for labelID in labelIDs:
-        idxs = np.where(clt.labels_ == labelID)[0]
-        owner_pic = data[idxs[0]]["imagePath"]
-        image = cv2.imread(owner_pic)
-        (x1, y1, x2, y2) = data[idxs[0]]["loc"]
-        # face = image[int(y1):int(y2), int(x1):int(x2)]
-        face = cv2.rectangle(image,(int(x1),int(y1)),(int(x2),int(y2)),(0,255,0),3)
-        # try:
-        #     face = cv2.resize(face, (96, 96))
-        # except:
-        #     face = np.random.randint(5, size=(96, 96))
+        idxs = np.where(labels_ == labelID)[0]
+        if labelID != -1:
+            owner_pic = data[idxs[0]]["imagePath"]
+            image = cv2.imread(owner_pic)
+            (x1, y1, x2, y2) = data[idxs[0]]["loc"]
+            face = cv2.rectangle(image,(int(x1),int(y1)),(int(x2),int(y2)),(0,255,0),3)
+        else:
+            face = cv2.imread("static/unclassified.jpg")
+
         face_img_path = f"{user.get_username()}_owner{labelID}.jpg"
         cv2.imwrite(f"static/images/{face_img_path}", face)
         person = Person.objects.create(user=user, thumbnail=face_img_path)

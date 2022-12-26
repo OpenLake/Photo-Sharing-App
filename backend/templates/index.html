@@ -53,7 +53,7 @@
                     </ul>
                 </div>
                 <br>
-                <form method="post" action="{% url 'process' %}">
+            <form method="POST" action="{% url 'process' %}">
                     {% csrf_token %}
                 <div class="card">
                     <div class="adjust-style">
@@ -63,6 +63,14 @@
                         <option value="yolov7">YOLOV7(Recommended for cuda enabled GPU users)</option>
                         <option value="yolov7w6">YOLOV7(High-End)(Recommended for cuda enabled GPU users)</option>
                       </select>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="adjust-style">
+                        <p>Select Appropriate Parameters for Clustering</p>
+                        <label for="minSize">Min Cluster Size </label>
+                        <input id="minSize" type="number" name="Size" />
                     </div>
                 </div>
 
