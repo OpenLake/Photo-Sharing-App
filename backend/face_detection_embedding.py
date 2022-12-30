@@ -1,5 +1,6 @@
 import time
 import torch
+import umap
 from ML.yolov7face.models.experimental import attempt_load
 from ML.yolov7face.utils.datasets import LoadImages
 from ML.yolov7face.utils.general import check_img_size, set_logging
@@ -72,4 +73,10 @@ def generateEmbedding(dic,batch_size=64):
         use_multiprocessing=True
     )
     transformer = Normalizer().fit(data)
-    return transformer.transform(data)
+    clusterable_embedding = umap.UMAP(
+                            n_neighbors=10,
+                            min_dist=0.0,
+                            n_components=10,
+                            random_state=42,
+                        ).fit_transform(transformer.transform(data))
+    return clusterable_embedding
