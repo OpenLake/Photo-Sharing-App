@@ -36,14 +36,14 @@ post_type = re.compile(r"static/images/(.*)")
 import face_detection_embedding
 
 # Create your views here.
-def landing(request):
-    return render(request, "landing.html")
+# def landing(request):
+#     return render(request, "landing.html")
 
 
 def index(request):    
     user = request.user
     if user.is_anonymous:
-        return redirect("/landing")
+        return redirect("/login")
 
     elif request.method == "POST":
         images = request.FILES.getlist("images")
@@ -59,10 +59,17 @@ def index(request):
 
 
 def loginUser(request):
-    if request.method == "POST":
-        roomcode = request.POST.get("roomCode")
-        password = request.POST.get("inputPassword")
-        user = authenticate(username=roomcode, password=password)
+    if request.method == "POST" and "signup" in request.POST:
+        first_name = request.POST.get("first_name")
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+        user = User.objects.create_user(username=username, password=password, first_name=first_name)
+        user.save()
+        return redirect("/login")
+    if request.method == "POST" and "login" in request.POST:
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+        user = authenticate(username=username, password=password)
         if user is not None:
             login(request, user)
             return redirect("/")
@@ -73,24 +80,24 @@ def loginUser(request):
 
 def logoutUser(request):
     logout(request)
-    return redirect("/landing")
+    return redirect("/login")
 
 
-def registerUser(request):
-    global res
-    res = "".join(random.choices(string.ascii_uppercase + string.digits, k=8))
-    context = {"rcode": res}
+# def registerUser(request):
+#     global res
+#     res = "".join(random.choices(string.ascii_uppercase + string.digits, k=8))
+#     context = {"rcode": res}
 
-    return render(request, "register.html", context)
+#     return render(request, "register.html", context)
 
 
-def registerUser2(request):
-    if request.method == "POST":
-        roomcode = res
-        password = request.POST.get("inputPassword")
-        user = User.objects.create_user(roomcode, "", password)
-        user.save()
-        return redirect("/login")
+# def registerUser2(request):
+#     if request.method == "POST":
+#         roomcode = res
+#         password = request.POST.get("inputPassword")
+#         user = User.objects.create_user(roomcode, "", password)
+#         user.save()
+#         return redirect("/login")
 
 
 def viewPhoto(request, pk):
