@@ -231,6 +231,7 @@
                     <input type="text" name="first_name" placeholder="Name">
                     <input type="email" name="username" placeholder="Email">
                     <input type="password" name="password" placeholder="Password">
+                    <h6 style="color:red">{{ error }}</h6>
                     <button class="form_btn" type="submit" name="signup">Sign Up</button>
                 </form>
             </div>
@@ -252,6 +253,9 @@
                     <span>OR</span>
                     <input type="email" name="username" placeholder="Email">
                     <input type="password" name="password" placeholder="Password">
+                    {% for message in messages %}
+                    <h6 style="color:red;">{{ message }}</h6>
+                    {% endfor %}
                     <button class="form_btn" type="submit" name="login">Log in</button>
                 </form>
             </div>

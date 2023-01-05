@@ -8,6 +8,7 @@ import string
 import random
 from utils import checkGPUavailable, download_weights
 import hdbscan
+from django.contrib import messages
 
 
 # Required for image processing
@@ -63,9 +64,14 @@ def loginUser(request):
         first_name = request.POST.get("first_name")
         username = request.POST.get("username")
         password = request.POST.get("password")
-        user = User.objects.create_user(username=username, password=password, first_name=first_name)
-        user.save()
-        return redirect("/login")
+        if User.objects.filter(username = username).first():
+            alert = {"error": "Username already  in use."}
+            return render(request, "login.html", alert)
+            
+        else:
+            user = User.objects.create_user(username=username, password=password, first_name=first_name)
+            user.save()
+            return redirect("/login")
     if request.method == "POST" and "login" in request.POST:
         username = request.POST.get("username")
         password = request.POST.get("password")
@@ -74,6 +80,7 @@ def loginUser(request):
             login(request, user)
             return redirect("/")
         else:
+            messages.error(request, "Invalid Credentials")
             return render(request, "login.html")
     return render(request, "login.html")
 
