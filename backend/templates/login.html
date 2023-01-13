@@ -1,40 +1,291 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="">
-    <meta name="author" content="">
-    <link rel="icon" href="/docs/4.0/assets/img/favicons/favicon.ico">
 
-    <title>Login</title>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        @import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css");
 
-    <link rel="canonical" href="https://getbootstrap.com/docs/4.0/examples/sign-in/">
+        * {
+            box-sizing: border-box;
+        }
 
-    <!-- Bootstrap core CSS -->
-    <link href="https://getbootstrap.com/docs/4.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        body {
+            font-family: "Montserrat", sans-serif;
+            margin: 0;
+            padding: 0;
+            font-family: "Montserrat", sans-serif;
+        }
 
-    <!-- Custom styles for this template -->
-    <link href="https://getbootstrap.com/docs/4.0/examples/sign-in/signin.css" rel="stylesheet">
-  </head>
+        .wrapper {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #ebecf0;
+            overflow: hidden;
+        }
 
-  <body class="text-center">
-   
-    <form class="form-signin" method="post" action="/login">
-    {% csrf_token %}
-      <img src="https://i.imgur.com/ACSFEPZ.png" alt="" width="256" height="256">
-      
-      <h1 class="h3 mb-3 font-weight-normal">Please sign in</h1>
-      
-      <label for="inputEmail" class="sr-only">RoomCode</label>
-      <input type="text" id="roomCode" name="roomCode" class="form-control" placeholder="Room Code" required autofocus>
-      <br>
-      <label for="inputPassword" class="sr-only">Password</label>
-      <input type="password" id="inputPassword" name="inputPassword" class="form-control" placeholder="Password" required>
-      <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
-      <br>
-      <a href="/register">Register</a>
-    </form>
-  
+        .container {
+            border-radius: 10px;
+            box-shadow: -5px -5px 10px #fff, 5px 5px 10px #babebc;
+            position: absolute;
+            width: 768px;
+            min-height: 480px;
+            overflow: hidden;
+        }
+
+        form {
+            background: #ebecf0;
+            display: flex;
+            flex-direction: column;
+            padding: 0 50px;
+            height: 100%;
+            justify-content: center;
+            align-items: center;
+        }
+
+        form input {
+            background: #eee;
+            padding: 16px;
+            margin: 8px 0;
+            width: 85%;
+            border: 0;
+            outline: none;
+            border-radius: 20px;
+            box-shadow: inset 7px 2px 10px #babebc, inset -5px -5px 12px #fff;
+        }
+
+        button {
+            border-radius: 20px;
+            border: none;
+            outline: none;
+            font-size: 12px;
+            font-weight: bold;
+            padding: 15px 45px;
+            margin: 14px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: transform 80ms ease-in;
+            background-color: #4B70E2;
+            color: #f9f9f9;
+            box-shadow: 8px 8px 16px #d1d9e6, -8px -8px 16px #f9f9f9;
+        }
+
+        .form_btn {
+            box-shadow: -5px -5px 10px #fff, 5px 5px 8px #babebc;
+        }
+
+        .form_btn:active {
+            box-shadow: inset 1px 1px 2px #babebc, inset -1px -1px 2px #fff;
+        }
+
+        .overlay_btn {
+            background-color: #4B70E2;
+            color: #fff;
+            box-shadow: 8px 8px 16px #d1d9e6, -8px -8px 16px #f9f9f9;
+        }
+
+        .sign-in-container {
+            position: absolute;
+            left: 0;
+            width: 50%;
+            height: 100%;
+            transition: all 0.5s;
+        }
+
+        .sign-up-container {
+            position: absolute;
+            left: 0;
+            width: 50%;
+            height: 100%;
+            opacity: 0;
+            transition: all 0.5s;
+        }
+
+        .overlay-left {
+            display: flex;
+            flex-direction: column;
+            padding: 0 50px;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            right: 0;
+            width: 50%;
+            height: 100%;
+            opacity: 0;
+            background-color: #ebecf0;
+            color: black;
+            transition: all 0.5s;
+            box-shadow: 5px 5px 10px #babebc
+        }
+
+        .overlay-right {
+            display: flex;
+            flex-direction: column;
+            padding: 0 50px;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            right: 0;
+            width: 50%;
+            height: 100%;
+            background-color: #ebecf0;
+            color: black;
+            transition: all 0.5s;
+            box-shadow: -5px -5px 10px #fff
+        }
+
+        .container.right-panel-active .sign-in-container {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+
+        .container.right-panel-active .sign-up-container {
+            transform: translateX(100%);
+            opacity: 1;
+            z-index: 2;
+        }
+
+        .container.right-panel-active .overlay-right {
+            transform: translateX(-100%);
+            opacity: 0;
+        }
+
+        .container.right-panel-active .overlay-left {
+            transform: translateX(-100%);
+            opacity: 1;
+            z-index: 2;
+        }
+
+        .social-links {
+            margin: 20px 0;
+        }
+
+        form h1 {
+            font-weight: bold;
+            margin: 0;
+            color: #000;
+        }
+
+        p {
+            font-size: 16px;
+            letter-spacing: 0.5px;
+            margin: 20px 0 30px;
+        }
+
+        span {
+            font-size: 12px;
+            color: #000;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+        }
+
+        .social-links div {
+            width: 40px;
+            height: 40px;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 5px;
+            border-radius: 50%;
+            box-shadow: -5px -5px 10px #fff, 5px 5px 8px #babebc;
+            cursor: pointer;
+        }
+
+        .social-links a {
+            color: #000;
+        }
+
+        .social-links div:active {
+            box-shadow: inset 1px 1px 2px #babebc, inset -1px -1px 2px #fff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <div class="sign-up-container">
+                <form method="post" action="/login">
+                    {% csrf_token %}
+                    <h1>Create Account</h1>
+                    <div class="social-links">
+                        <!-- <div>
+                            <a href=""><i class="fa fa-google-plus" aria-hidden="true"></i></a>
+                        </div> -->
+                        <!-- <div>
+                            <a href="#"><i class="fa fa-twitter" aria-hidden="true"></i></a>
+                        </div>
+                        <div>
+                            <a href="#"><i class="fa fa-linkedin" aria-hidden="true"></i></a>
+                        </div> -->
+                    </div>
+                    <span>OR</span>
+                    <input type="text" name="first_name" placeholder="Name">
+                    <input type="email" name="username" placeholder="Email">
+                    <input type="password" name="password" placeholder="Password">
+                    <h6 style="color:red">{{ error }}</h6>
+                    <button class="form_btn" type="submit" name="signup">Sign Up</button>
+                </form>
+            </div>
+            <div class="sign-in-container">
+                <form method="post" action="/login">
+                    {% csrf_token %}
+                    <h1>LOGIN</h1>
+                    <div class="social-links">
+                        <!-- <div>
+                            <a href=""><i class="fa fa-google-plus" aria-hidden="true"></i></a>
+                        </div> -->
+                        <!-- <div>
+                            <a href="#"><i class="fa fa-twitter" aria-hidden="true"></i></a>
+                        </div>
+                        <div>
+                            <a href="#"><i class="fa fa-linkedin" aria-hidden="true"></i></a>
+                        </div> -->
+                    </div>
+                    <span>OR</span>
+                    <input type="email" name="username" placeholder="Email">
+                    <input type="password" name="password" placeholder="Password">
+                    {% for message in messages %}
+                    <h6 style="color:red;">{{ message }}</h6>
+                    {% endfor %}
+                    <button class="form_btn" type="submit" name="login">Log in</button>
+                </form>
+            </div>
+            <div class="overlay-container">
+                <div class="overlay-left">
+                    <h1>Welcome Back</h1>
+                    <p>Already have an account?</p>
+                    <button id="signIn" class="overlay_btn">Login</button>
+                </div>
+                <div class="overlay-right">
+                    <h1>Hello, Friend</h1>
+                    <p>Don't have an account?</p>
+                    <button id="signUp" class="overlay_btn">Sign Up</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        const signUpBtn = document.getElementById("signUp");
+        const signInBtn = document.getElementById("signIn");
+        const container = document.querySelector(".container");
+
+        signUpBtn.addEventListener("click", () => {
+            container.classList.add("right-panel-active");
+        });
+
+        signInBtn.addEventListener("click", () => {
+            container.classList.remove("right-panel-active");
+        });
+    </script>
 </body>
+
 </html>
