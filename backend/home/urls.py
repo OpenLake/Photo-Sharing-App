@@ -6,6 +6,7 @@ urlpatterns = [
     # path("landing", views.landing, name="landing"),
     path("login", views.loginUser, name="login"),
     path("logout", views.logoutUser, name="logout"),
+    path("images", views.images, name="images"),
     # path("register", views.registerUser, name="register"),
     # path("register2", views.registerUser2, name="register2"),
     path("photo/<str:pk>/", views.viewPhoto, name="photo"),
@@ -14,5 +15,5 @@ urlpatterns = [
     path("finalPhoto/<str:pk>/", views.finalPhoto, name="finalPhoto"),
     path("download/<str:pk>/", views.downloadZIP, name="download"),
     path("albumGallery", views.albumGallery, name="albumGallery"),
-    path("process", views.process, name="process"),
+    path("album", views.album, name="album"),
 ]
