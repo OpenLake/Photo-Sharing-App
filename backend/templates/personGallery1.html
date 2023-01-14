@@ -5,21 +5,9 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Album</title>
+    <title>Album Gallery</title>
 
-
-    <style>
-        .image-thumbail {
-            height: 200px;
-            object-fit: cover;
-        }
-
-        .list-group-item a {
-            text-decoration: none;
-            color: black;
-        }
-    </style>
-    <!-- Style for nav bar -->
+    <!-- style for nav bar -->
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap');
 
@@ -178,7 +166,7 @@
             }
         }
     </style>
-    <!-- Style for image layout -->
+    
     <style>
 
         /* --- Multicolumn --- */
@@ -231,7 +219,7 @@
         <div class="menu">
             <input type="checkbox" id="check">
             {% if request.user.is_authenticated %}
-            <div class="logo"></div>
+            <div class="logo"><a href="{% url 'download' person.id %}" style="padding: 5px 10px; box-shadow: -3px -3px 7px #ffffff, 3px 3px 5px #ceced1; ;" >Download Zip</a></div>
             {% endif %}
             <ul style="margin-bottom: 0;">
                 <label class="btn cancel" for="check"><i class="fas fa-times"></i></label>
@@ -245,9 +233,8 @@
         </div>
     </nav>
     <main class="lightbox">
-        {% for person in persons %}
-        <a href="{% url 'album' person.id %}"><img class="image-thumbail" src="{{person.thumbnail.url}}"
-                alt="Card image cap"></a>
+        {% for photo in personGalleryphotos %}
+        <img class="image-thumbail" src="{{photo.image.url}}" alt="Card image cap">
         {% endfor %}
     </main>
 </body>

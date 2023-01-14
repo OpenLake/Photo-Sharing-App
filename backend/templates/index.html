@@ -5,113 +5,259 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gallery</title>
+    <title>Home</title>
 
-    <!-- CSS only -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-giJF6kkoqNQ00vy+HMDP7azOuL0xtbfIcaT9wjKHr8RbDVddVHyTfAAsrekwKmP1" crossorigin="anonymous">
-        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <link rel="stylesheet" type="text/css" href="../static/skeuos.css">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css"
+        crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.min.css"
+        crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/gh/kartik-v/bootstrap-fileinput@5.5.2/css/fileinput.min.css" media="all"
+        rel="stylesheet" type="text/css" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/gh/kartik-v/bootstrap-fileinput@5.5.2/js/plugins/buffer.min.js"
+        type="text/javascript"></script>
+    <script src="https://cdn.jsdelivr.net/gh/kartik-v/bootstrap-fileinput@5.5.2/js/plugins/filetype.min.js"
+        type="text/javascript"></script>
+    <script src="https://cdn.jsdelivr.net/gh/kartik-v/bootstrap-fileinput@5.5.2/js/plugins/piexif.min.js"
+        type="text/javascript"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/gh/kartik-v/bootstrap-fileinput@5.5.2/js/fileinput.min.js"></script>
+
+    <!-- Style for nav bar -->
     <style>
-        .image-thumbail {
-            height: 200px;
-            object-fit: cover;
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
         }
 
-        .list-group-item a {
-            text-decoration: none;
-            color: black;
+        body {
+            background: #ecf0f3;
         }
-        
-        .adjust-style{
-            margin: 10px;
-            /* flex-flow: column wrap; */
-            overflow: hidden;
+
+        nav {
+            width: 100%;
+            padding: 12px 0;
+            background: #ecf0f3;
+            box-shadow: -3px -3px 7px #ffffff,
+                3px 3px 5px #ceced1,
+                inset -3px -3px 7px #ffffff,
+                inset 3px 3px 5px #ceced1;
+        }
+
+        nav .menu {
+            max-width: 1270px;
+            margin: auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .menu .logo a {
+            font-size: 28px;
+            font-weight: 600;
+            text-decoration: none;
+            color: #31344b;
+        }
+
+        .menu ul {
+            list-style: none;
+            display: flex;
+        }
+
+        .menu ul a {
+            margin: 0 8px;
+            text-decoration: none;
+            font-size: 18px;
+            color: #31344b;
+            font-weight: 400;
+            display: inline-flex;
+            padding: 10px 12px;
+            box-shadow: -3px -3px 7px #ffffff,
+                3px 3px 5px #ceced1;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .menu ul a:hover:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            box-shadow: inset -3px -3px 7px #ffffff,
+                inset 3px 3px 5px #ceced1;
+        }
+
+        .center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .upper {
+            font-size: 40px;
+            font-weight: 600;
+            color: #31344b;
+        }
+
+        .lower {
+            font-size: 40px;
+            font-weight: 600;
+            color: #31344b;
+        }
+
+        .menu ul a:hover {
+            color: #3498db;
+        }
+
+        nav label.btn {
+            color: #31344b;
+            font-size: 18px;
+            cursor: pointer;
+            display: none;
+        }
+
+        nav label.cancel {
+            position: absolute;
+            top: 25px;
+            right: 30px;
+        }
+
+        #check {
+            display: none;
+        }
+
+        @media (max-width:940px) {
+            .menu ul {
+                display: block;
+                position: fixed;
+                top: 0;
+                left: -100%;
+                width: 100%;
+                max-width: 400px;
+                padding-top: 45px;
+                height: 100%;
+                background: #ecf0f3;
+                box-shadow: 0 5px 10px #b0b0b5;
+                z-index: 12;
+                transition: all 0.3s ease;
+            }
+
+            .menu ul a {
+                display: block;
+                font-size: 23px;
+                width: 100%;
+                margin-top: 30px;
+                box-shadow: none;
+                text-align: center;
+            }
+
+            .menu ul a:hover:before {
+                box-shadow: none;
+            }
+
+            nav label.bars {
+                display: block;
+            }
+
+            #check:checked~label.bars {
+                display: none;
+            }
+
+            #check:checked~ul label.cancel {
+                display: block;
+            }
+
+            #check:checked~ul {
+                left: 0;
+            }
         }
     </style>
+    <style>
+        .file-drop-zone .clearfix {
+            max-height: 260px;
+            overflow: auto;
+        }
+        .krajee-default.file-preview-frame .kv-file-content {
+            width: auto;
+        }
+        .file-footer-buttons {
+            display: none;
+        }
+    </style>
+
+
 </head>
 
-    <div class="container" style="padding-top: 50px;">
-        <div class="row">
-            <div class="col-md-3">
-                {% if request.user.is_authenticated %}
-                <p>Your RoomCode:<br> <strong>{{request.user}}</strong></p>
-                <p>Photos Uploaded:<br> <strong>{{count}}</strong></p>
-                <p>GPU Acceleration Available: <br> <strong>{{GPU}}</strong> </p>
-                {% endif %}
-                
-                <div class="card">
-                    <ul class="list-group list-group-flush">
-                        <form method='POST' action="/" enctype="multipart/form-data">
-                            {% csrf_token %}
-                            <div class="form-group m-3">
-                                <label>Upload image</label>
-                                <input required name="images" type="file" multiple webkitdirectory directory class="form-control-file">
-                            </div>
-                            <button type='submit' class="btn btn-primary m-3">Submit</button>
-                        </form>
-                    </ul>
-                </div>
-                <br>
-            <form method="POST" action="{% url 'process' %}">
-                    {% csrf_token %}
-                <div class="card">
-                    <div class="adjust-style">
-                    <p>Select Appropriate Model:</p>
-                    <select name="models" id="models">
-                        <option value="mediapipe">MediaPipe(Recommended for CPU users)</option>
-                        <option value="yolov7">YOLOV7(Recommended for cuda enabled GPU users)</option>
-                        <option value="yolov7w6">YOLOV7(High-End)(Recommended for cuda enabled GPU users)</option>
-                      </select>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div class="adjust-style">
-                        <p>Select Appropriate Parameters for Clustering</p>
-                        <label for="minSize">Min Cluster Size </label>
-                        <input id="minSize" type="number" name="Size" min="2" value="10" />
-                    </div>
-                </div>
-
-                <div class="card">
-                    <ul class="list-group list-group-flush">
-                        <button class="btn btn-dark btn-block btn-sm m-1" type="submit">Process</button>
-                        <a href="{% url 'logout' %}" class="btn btn-dark btn-block btn-sm m-1">Logout</a>
-                    </ul>
-                </div>
-            </form>
-
-            </div>
-            <div class="col-md-9">
-                <div class="row">
-
-                    {% for photo in photos %}
-                    <div class="col-md-4">
-                        <div class="card my-2" style="position: relative">
-                            <img class="image-thumbail" src="{{photo.image.url}}" alt="Card image cap">
-                            
-                            <a href="{% url 'photo' photo.id %}" class="btn btn-outline-dark btn-sm m-1">View</a>
-                            
-                            <form method='POST' action="{% url 'delete' photo.id %}">
-                                {% csrf_token %}      
-                                <input type="image" src="https://i.imgur.com/uwjl1lM.png" width="30" height="30" style="position: absolute; top: 7px; right: 7px"/>
-                            </form>
-                            
-
-                        </div>
-                    </div>
-                    {% empty %}
-                    <h3>No photos...</h3>
-                    {% endfor %}
-
-
-
-                </div>
-            </div>
+<body>
+    <nav>
+        <div class="menu">
+            <input type="checkbox" id="check">
+            {% if request.user.is_authenticated %}
+            <div class="logo"><a>Hi, {{request.user.first_name}}</a></div>
+            {% endif %}
+            <ul style="margin-bottom: 0;">
+                <label class="btn cancel" for="check"><i class="fas fa-times"></i></label>
+                <li><a href="/">Home</a></li>
+                <li><a href="/images">Images</a></li>
+                <li><a href="/album">Album</a></li>
+                <li><a href="{% url 'logout' %}">Logout</a></li>
+            </ul>
+            <label for="check" class="btn bars"><i class="fas fa-bars"></i></label>
+        </div>
+        </div>
+    </nav>
+    <div
+        style="width: 50%; margin: 25px auto; box-shadow: -5px -5px 10px #fff, 5px 5px 10px #babebc; border-radius: 10px;">
+        {% csrf_token %}
+        <div class="file-loading">
+            <input id="input-folder-3" name="input-folder" type="file" multiple webkitdirectory>
         </div>
     </div>
+    <div class="demo" style="width: 50%; display: flex;justify-content: space-between; margin: auto; font-size: 13px;">
+        <section class="paper" style="width: 69%">
+            <b>Select appropriate model</b>
+            <label><input type="radio" value="mediapipe" name="models" checked>MediaPipe(Recommended for CPU
+                users)</label>
+            <label><input type="radio" value="yolov7" name="models">YOLOV7(Recommended for cuda enabled GPU
+                users)</label>
+            <label><input type="radio" value="yolov7w6" name="models">YOLOV7(High-End)(Recommended for cuda enabled GPU
+                users)</label>
+        </section>
+        <section class="paper" style="width: 25%">
+            <b>Min cluster size</b>
+            <input type="number" name="Size" style="width: 100%;" min="2" value="10">
+        </section>
+    </div>
 
+    <script>
+        $(document).ready(function () {
+            $("#input-folder-3").fileinput({
+                uploadUrl: "/",
+                hideThumbnailContent: false, // hide image, pdf, text or other content in the thumbnail preview
+                uploadAsync: false,
+                showRemove: false,
+                uploadExtraData: {
+                    csrfmiddlewaretoken: "{{ csrf_token }}",
+                    models: document.getElementsByName("models")[0].value,
+                    Size: document.getElementsByName("Size")[0].value
+                }
+
+            });
+        });
+    </script>
 </body>
 
 </html>

@@ -5,20 +5,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Album</title>
-
-
-    <style>
-        .image-thumbail {
-            height: 200px;
-            object-fit: cover;
-        }
-
-        .list-group-item a {
-            text-decoration: none;
-            color: black;
-        }
-    </style>
+    <title>Images</title>
     <!-- Style for nav bar -->
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap');
@@ -178,9 +165,9 @@
             }
         }
     </style>
+
     <!-- Style for image layout -->
     <style>
-
         /* --- Multicolumn --- */
         main {
             display: block;
@@ -230,9 +217,9 @@
     <nav>
         <div class="menu">
             <input type="checkbox" id="check">
-            {% if request.user.is_authenticated %}
-            <div class="logo"></div>
-            {% endif %}
+            <!-- {% if request.user.is_authenticated %} -->
+            <div class="logo"><a href="#"></a></div>
+            <!-- {% endif %} -->
             <ul style="margin-bottom: 0;">
                 <label class="btn cancel" for="check"><i class="fas fa-times"></i></label>
                 <li><a href="/">Home</a></li>
@@ -245,10 +232,13 @@
         </div>
     </nav>
     <main class="lightbox">
-        {% for person in persons %}
-        <a href="{% url 'album' person.id %}"><img class="image-thumbail" src="{{person.thumbnail.url}}"
-                alt="Card image cap"></a>
-        {% endfor %}
+            {% for photo in photos %}
+            <img class="image-thumbail" src="{{photo.image.url}}" alt="Card image cap" >
+                <form method='POST' action="{% url 'delete' photo.id %}" style="position: relative;">
+                    {% csrf_token %}
+                    <input type="image" src="https://i.imgur.com/uwjl1lM.png" width="30" height="30" style="position: absolute; top: -55px; left: 10px;"/>
+                </form>
+            {% endfor %}
     </main>
 </body>
 

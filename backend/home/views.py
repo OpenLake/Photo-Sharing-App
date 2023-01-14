@@ -21,7 +21,7 @@ import re
 import os
 import zipfile
 import tempfile, zipfile
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from wsgiref.util import FileWrapper
 
 # for checking face simmilarity
@@ -47,16 +47,107 @@ def index(request):
         return redirect("/login")
 
     elif request.method == "POST":
-        images = request.FILES.getlist("images")
+        images = request.FILES.getlist("input-folder")
         for image in images:
             photo = Photo.objects.create(user=user, image=image)
             photo.save()
+        Person.objects.filter(user=user).delete()
+        photos = Photo.objects.filter(user=user)
+        # imagePaths = [("static/images/" + str(photo.image)) for photo in photos]
+        imagePaths = "static/images/"+ str(user)
+        # print(request.method)
+        models = request.POST["models"]
+        # Yha se code start kro
+        if models == "mediapipe":
+            dic, unclassified = face_detection_embedding.detectPeopleMediaPipe({"path": imagePaths, "confidence": 0.25})
+        elif models == "yolov7":
+            # Check if weights exists if not then I will download them from internet
+            download_weights("ML/yolov7face/weights/yolov7-face.pt", "https://drive.google.com/file/d/1k7zcq5_Vj8oqnkvll5Uvg57StOOYLnKn/view?usp=share_link")
+            dic, unclassified = face_detection_embedding.detectPeopleYolov7({"weights":"ML/yolov7face/weights/yolov7-face.pt",
+                                                                            "source": imagePaths,
+                                                                            "img_size": 640,
+                                                                            "conf_thres": 0.25,
+                                                                            "iou_thres": 0.45,
+                                                                            "device": '',
+                                                                            "agnostic_nms":False,
+                                                                            "classes": None,
+                                                                            "augment": False,
+                                                                            "hide_conf": False,
+                                                                            "kpt_label": 5})
+        else:
+            # Check if weights exists if not then I will download them from internet
+            download_weights("ML/yolov7face/weights/yolov7-w6-face.pt", "https://drive.google.com/file/d/1ThpUTdnEFG13WhGEPCI0Ut2NJYdq59-B/view?usp=share_link")
+            dic, unclassified = face_detection_embedding.detectPeopleYolov7({"weights":"ML/yolov7face/weights/yolov7-w6-face.pt",
+                                                                            "source": imagePaths,
+                                                                            "img_size": 640,
+                                                                            "conf_thres": 0.25,
+                                                                            "iou_thres": 0.45,
+                                                                            "device": '',
+                                                                            "agnostic_nms":False,
+                                                                            "classes": None,
+                                                                            "augment": False,
+                                                                            "hide_conf": False,
+                                                                            "kpt_label": 5})                  
+        
+        # Checking to see if VGGFace weights exists
+        download_weights("ML/FaceNet/Weights/facenet_keras_weights.h5", "https://drive.google.com/file/d/1QAYt7g9ig6UHYdpd1WW7P1Ci2XN32Kfd/view?usp=sharing")
+        encodings = face_detection_embedding.generateEmbedding(dic)
+        
+        data = []
+        for path, boundingboxes in dic.items():
+            data.extend([{"imagePath": path, "loc": i,} for i in boundingboxes])
+        
+        print("Shape of encodings", np.array(encodings).shape)
 
+        labels_ = hdbscan.HDBSCAN(min_samples=10,min_cluster_size=int(request.POST["Size"])).fit_predict(encodings)
+        labelIDs = np.unique(labels_)
+        numUniqueFaces = len(np.where(labelIDs > -1)[0])
+        
+        for labelID in labelIDs:
+            idxs = np.where(labels_ == labelID)[0]
+            if labelID != -1:
+                owner_pic = data[idxs[0]]["imagePath"]
+                image = cv2.imread(owner_pic)
+                (x1, y1, x2, y2) = data[idxs[0]]["loc"]
+                face = cv2.rectangle(image,(int(x1),int(y1)),(int(x2),int(y2)),(0,255,0),3)
+            else:
+                face = cv2.imread("static/unclassified.jpg")
+
+            face_img_path = f"{user.get_username()}_owner{labelID}.jpg"
+            cv2.imwrite(f"static/images/{face_img_path}", face)
+            person = Person.objects.create(user=user, thumbnail=face_img_path)
+            person.save()
+
+            for i in idxs:
+                src_direc = data[i]["imagePath"]
+                link = post_type.search(src_direc)
+                personGallery = PersonGallery.objects.create(
+                    person=person, image=str(link.group(1))
+                )
+                personGallery.save()
+        nothing = {'nothing' : True}
+        return JsonResponse(nothing)
     photos = Photo.objects.filter(user=user)
     count = photos.count()
     is_gpu = checkGPUavailable()
     context = {"photos": photos, "count": count, "GPU": is_gpu}
     return render(request, "index.html", context)
+# def index(request):    
+#     user = request.user
+#     if user.is_anonymous:
+#         return redirect("/login")
+
+#     elif request.method == "POST":
+#         images = request.FILES.getlist("images")
+#         for image in images:
+#             photo = Photo.objects.create(user=user, image=image)
+#             photo.save()
+
+#     photos = Photo.objects.filter(user=user)
+#     count = photos.count()
+#     is_gpu = checkGPUavailable()
+#     context = {"photos": photos, "count": count, "GPU": is_gpu}
+#     return render(request, "index.html", context)
 
 
 def loginUser(request):
@@ -111,21 +202,30 @@ def viewPhoto(request, pk):
     photo = Photo.objects.get(id=pk)
     return render(request, "photo.html", {"photo": photo})
 
-
-def deletePhoto(request, pk):
+def images(request):
     user = request.user
     photos = Photo.objects.filter(user=user)
+    count = photos.count()
+    is_gpu = checkGPUavailable()
+    context = {"photos": photos, "count": count, "GPU": is_gpu}
+    return render(request, "images.html", context)
+
+def deletePhoto(request, pk):
     if request.method == "POST":
-        photo = photos.get(id=pk)
-        photo.delete()
-    return redirect("index")
+        user = request.user
+        photos = Photo.objects.filter(user=user, id=pk).values()
+        photosa = Photo.objects.filter(user=user, id=pk)
+        img = photos[0]
+        photosa.delete()
+        os.remove("static/images/" + img['image'])
+    return redirect("images")
 
 
-def process(request):
+def album(request):
     user = request.user
     if user.is_anonymous:
         return redirect("/login")
-    Person.objects.filter(user=user).delete()
+    # Person.objects.filter(user=user).delete()
     photos = Photo.objects.filter(user=user)
     if photos.count() == 0:
         context = {
@@ -133,81 +233,81 @@ def process(request):
         }
         return render(request, "404.html", context)
     
-    if request.method != 'POST':
-        return redirect("/login")
+    # if request.method != 'POST':
+    #     return redirect("/login")
     
-    # imagePaths = [("static/images/" + str(photo.image)) for photo in photos]
-    imagePaths = "static/images/"+ str(user)
-    # print(request.method)
-    models = request.POST["models"]
-    # Yha se code start kro
-    if models == "mediapipe":
-        dic, unclassified = face_detection_embedding.detectPeopleMediaPipe({"path": imagePaths, "confidence": 0.25})
-    elif models == "yolov7":
-        # Check if weights exists if not then I will download them from internet
-        download_weights("ML/yolov7face/weights/yolov7-face.pt", "https://drive.google.com/file/d/1k7zcq5_Vj8oqnkvll5Uvg57StOOYLnKn/view?usp=share_link")
-        dic, unclassified = face_detection_embedding.detectPeopleYolov7({"weights":"ML/yolov7face/weights/yolov7-face.pt",
-                                                                        "source": imagePaths,
-                                                                        "img_size": 640,
-                                                                        "conf_thres": 0.25,
-                                                                        "iou_thres": 0.45,
-                                                                        "device": '',
-                                                                        "agnostic_nms":False,
-                                                                        "classes": None,
-                                                                        "augment": False,
-                                                                        "hide_conf": False,
-                                                                        "kpt_label": 5})
-    else:
-        # Check if weights exists if not then I will download them from internet
-        download_weights("ML/yolov7face/weights/yolov7-w6-face.pt", "https://drive.google.com/file/d/1ThpUTdnEFG13WhGEPCI0Ut2NJYdq59-B/view?usp=share_link")
-        dic, unclassified = face_detection_embedding.detectPeopleYolov7({"weights":"ML/yolov7face/weights/yolov7-w6-face.pt",
-                                                                        "source": imagePaths,
-                                                                        "img_size": 640,
-                                                                        "conf_thres": 0.25,
-                                                                        "iou_thres": 0.45,
-                                                                        "device": '',
-                                                                        "agnostic_nms":False,
-                                                                        "classes": None,
-                                                                        "augment": False,
-                                                                        "hide_conf": False,
-                                                                        "kpt_label": 5})                  
+    # # imagePaths = [("static/images/" + str(photo.image)) for photo in photos]
+    # imagePaths = "static/images/"+ str(user)
+    # # print(request.method)
+    # models = request.POST["models"]
+    # # Yha se code start kro
+    # if models == "mediapipe":
+    #     dic, unclassified = face_detection_embedding.detectPeopleMediaPipe({"path": imagePaths, "confidence": 0.25})
+    # elif models == "yolov7":
+    #     # Check if weights exists if not then I will download them from internet
+    #     download_weights("ML/yolov7face/weights/yolov7-face.pt", "https://drive.google.com/file/d/1k7zcq5_Vj8oqnkvll5Uvg57StOOYLnKn/view?usp=share_link")
+    #     dic, unclassified = face_detection_embedding.detectPeopleYolov7({"weights":"ML/yolov7face/weights/yolov7-face.pt",
+    #                                                                     "source": imagePaths,
+    #                                                                     "img_size": 640,
+    #                                                                     "conf_thres": 0.25,
+    #                                                                     "iou_thres": 0.45,
+    #                                                                     "device": '',
+    #                                                                     "agnostic_nms":False,
+    #                                                                     "classes": None,
+    #                                                                     "augment": False,
+    #                                                                     "hide_conf": False,
+    #                                                                     "kpt_label": 5})
+    # else:
+    #     # Check if weights exists if not then I will download them from internet
+    #     download_weights("ML/yolov7face/weights/yolov7-w6-face.pt", "https://drive.google.com/file/d/1ThpUTdnEFG13WhGEPCI0Ut2NJYdq59-B/view?usp=share_link")
+    #     dic, unclassified = face_detection_embedding.detectPeopleYolov7({"weights":"ML/yolov7face/weights/yolov7-w6-face.pt",
+    #                                                                     "source": imagePaths,
+    #                                                                     "img_size": 640,
+    #                                                                     "conf_thres": 0.25,
+    #                                                                     "iou_thres": 0.45,
+    #                                                                     "device": '',
+    #                                                                     "agnostic_nms":False,
+    #                                                                     "classes": None,
+    #                                                                     "augment": False,
+    #                                                                     "hide_conf": False,
+    #                                                                     "kpt_label": 5})                  
     
-    # Checking to see if VGGFace weights exists
-    download_weights("ML/FaceNet/Weights/facenet_keras_weights.h5", "https://drive.google.com/file/d/1QAYt7g9ig6UHYdpd1WW7P1Ci2XN32Kfd/view?usp=sharing")
-    encodings = face_detection_embedding.generateEmbedding(dic)
+    # # Checking to see if VGGFace weights exists
+    # download_weights("ML/FaceNet/Weights/facenet_keras_weights.h5", "https://drive.google.com/file/d/1QAYt7g9ig6UHYdpd1WW7P1Ci2XN32Kfd/view?usp=sharing")
+    # encodings = face_detection_embedding.generateEmbedding(dic)
     
-    data = []
-    for path, boundingboxes in dic.items():
-        data.extend([{"imagePath": path, "loc": i,} for i in boundingboxes])
+    # data = []
+    # for path, boundingboxes in dic.items():
+    #     data.extend([{"imagePath": path, "loc": i,} for i in boundingboxes])
     
-    print("Shape of encodings", np.array(encodings).shape)
+    # print("Shape of encodings", np.array(encodings).shape)
 
-    labels_ = hdbscan.HDBSCAN(min_samples=10,min_cluster_size=int(request.POST["Size"])).fit_predict(encodings)
-    labelIDs = np.unique(labels_)
-    numUniqueFaces = len(np.where(labelIDs > -1)[0])
+    # labels_ = hdbscan.HDBSCAN(min_samples=10,min_cluster_size=int(request.POST["Size"])).fit_predict(encodings)
+    # labelIDs = np.unique(labels_)
+    # numUniqueFaces = len(np.where(labelIDs > -1)[0])
     
-    for labelID in labelIDs:
-        idxs = np.where(labels_ == labelID)[0]
-        if labelID != -1:
-            owner_pic = data[idxs[0]]["imagePath"]
-            image = cv2.imread(owner_pic)
-            (x1, y1, x2, y2) = data[idxs[0]]["loc"]
-            face = cv2.rectangle(image,(int(x1),int(y1)),(int(x2),int(y2)),(0,255,0),3)
-        else:
-            face = cv2.imread("static/unclassified.jpg")
+    # for labelID in labelIDs:
+    #     idxs = np.where(labels_ == labelID)[0]
+    #     if labelID != -1:
+    #         owner_pic = data[idxs[0]]["imagePath"]
+    #         image = cv2.imread(owner_pic)
+    #         (x1, y1, x2, y2) = data[idxs[0]]["loc"]
+    #         face = cv2.rectangle(image,(int(x1),int(y1)),(int(x2),int(y2)),(0,255,0),3)
+    #     else:
+    #         face = cv2.imread("static/unclassified.jpg")
 
-        face_img_path = f"{user.get_username()}_owner{labelID}.jpg"
-        cv2.imwrite(f"static/images/{face_img_path}", face)
-        person = Person.objects.create(user=user, thumbnail=face_img_path)
-        person.save()
+    #     face_img_path = f"{user.get_username()}_owner{labelID}.jpg"
+    #     cv2.imwrite(f"static/images/{face_img_path}", face)
+    #     person = Person.objects.create(user=user, thumbnail=face_img_path)
+    #     person.save()
 
-        for i in idxs:
-            src_direc = data[i]["imagePath"]
-            link = post_type.search(src_direc)
-            personGallery = PersonGallery.objects.create(
-                person=person, image=str(link.group(1))
-            )
-            personGallery.save()
+    #     for i in idxs:
+    #         src_direc = data[i]["imagePath"]
+    #         link = post_type.search(src_direc)
+    #         personGallery = PersonGallery.objects.create(
+    #             person=person, image=str(link.group(1))
+    #         )
+    #         personGallery.save()
     user = request.user
     persons = Person.objects.filter(user=user)
 
@@ -281,7 +381,7 @@ def viewAlbum(request, pk):
         "personGalleryphotos": personGalleryphotos,
         "count": count,
     }
-    return render(request, "personGallery.html", context)
+    return render(request, "personGallery1.html", context)
 
 
 def finalPhoto(request, pk):
@@ -299,7 +399,7 @@ def downloadZIP(request, pk):
     archive = zipfile.ZipFile(temp, "w", zipfile.ZIP_DEFLATED)
     for photo in allPhotos:
         filename = (
-            os.getcwd() + str("/static/images") + photo.image.url
+            os.getcwd() + str("/static/images/") + photo.image.name
         )  # Replace by your files here.
         photo_name = photo.image.url[1:]
         archive.write(filename, f"{photo_name}")
