@@ -7,22 +7,19 @@ a separate album with all their photos allowing them to get the photos they need
 Upload group photos, arrange them by faces using ML and share them with ease. 🤳🤖
 
 ## Installation
-- Option 1: Use the deployed version at: https://photo-organizer.herokuapp.com/
------------------------------------------------------
-- Option 2: 
-    1. ### Setting up git:
-    - [Download and install the latest version of Git.](https://git-scm.com/downloads)
-    - (Optional) [Set your username in Git.](https://help.github.com/articles/setting-your-username-in-git)
-    - (Optional) [Set your commit email address in Git.](https://help.github.com/articles/setting-your-commit-email-address-in-git)
-    2. ### Cloning the Repo in your local machine
-    - Run ``git clone git@github.com:OpenLake/Photo-Sharing-App.git``
-    - ``cd Photo-Sharing-App``
-    - Make a virtual environment named .env ``python3 -m venv .env``
-    - Activate ``.env`` by ``source .env/bin/activate``
-    - Download the requirements ``pip install -r requirements.txt``
-    - Run script ``bash setup.sh``
-    - Go to  http://127.0.0.1:8000/
-    - You are good to go! 🤘
+1. ### Setting up git:
+- [Download and install the latest version of Git.](https://git-scm.com/downloads)
+- (Optional) [Set your username in Git.](https://help.github.com/articles/setting-your-username-in-git)
+- (Optional) [Set your commit email address in Git.](https://help.github.com/articles/setting-your-commit-email-address-in-git)
+2. ### Cloning the Repo in your local machine
+- Run ``git clone git@github.com:OpenLake/Photo-Sharing-App.git``
+- ``cd Photo-Sharing-App``
+- Make a virtual environment named .env ``python3 -m venv .env``
+- Activate ``.env`` by ``source .env/bin/activate``
+- Download the requirements ``pip install -r requirements.txt``
+- Run script ``bash setup.sh``
+- Go to  http://127.0.0.1:8000/
+- You are good to go! 🤘
 
 ## Usage
 ![1](https://user-images.githubusercontent.com/72318258/150670154-05acfa34-7ffd-4bcb-a790-219501713454.png)
