@@ -20,7 +20,10 @@ Upload group photos, arrange them by faces using ML and share them with ease. ðŸ
     - Make a virtual environment named .env ``python3 -m venv .env``
     - Activate ``.env`` by ``source .env/bin/activate``
     - Download the requirements ``pip install -r requirements.txt``
-    - Run script ``bash setup.sh``
+    - Run ``cd backend``
+    - Run ``python3 manage.py makemigrations``
+    - Run ``python3 manage.py migrate``
+    - Run ``python3 manage.py runserver 8000``
     - Go to  http://127.0.0.1:8000/
     - You are good to go! ðŸ¤˜
 
